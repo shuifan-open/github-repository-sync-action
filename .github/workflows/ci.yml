@@ -62,3 +62,30 @@ jobs:
       - name: Print Output
         id: output
         run: echo "${{ steps.test-action.outputs.time }}"
+
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: '16'
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Build the action
+        run: npm run build
+
+      - name: Run synchronization
+        uses: ./
+        with:
+          source_repository_url: ${{ secrets.SOURCE_REPOSITORY_URL }}
+          source_repository_username: ${{ secrets.SOURCE_REPOSITORY_USERNAME }}
+          source_repository_password: ${{ secrets.SOURCE_REPOSITORY_PASSWORD }}
+          target_repository_url: ${{ secrets.TARGET_REPOSITORY_URL }}
+          target_repository_username: ${{ secrets.TARGET_REPOSITORY_USERNAME }}
+          target_repository_password: ${{ secrets.TARGET_REPOSITORY_PASSWORD }}

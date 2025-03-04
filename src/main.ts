@@ -1,5 +1,5 @@
 import * as core from '@actions/core'
-import { wait } from './wait.js'
+import * as exec from '@actions/exec'
 
 /**
  * The main function for the action.
@@ -8,20 +8,42 @@ import { wait } from './wait.js'
  */
 export async function run(): Promise<void> {
   try {
-    const ms: string = core.getInput('milliseconds')
+    // 从 secrets 中获取源仓库信息
+    const sourceRepositoryUrl = core.getInput('source_repository_url', { required: true })
+    const sourceRepositoryUsername = core.getInput('source_repository_username')
+    const sourceRepositoryPassword = core.getInput('source_repository_password')
 
-    // Debug logs are only output if the `ACTIONS_STEP_DEBUG` secret is true
-    core.debug(`Waiting ${ms} milliseconds ...`)
+    // 从 secrets 中获取目标仓库信息
+    const targetRepositoryUrl = core.getInput('target_repository_url', { required: true })
+    const targetRepositoryUsername = core.getInput('target_repository_username')
+    const targetRepositoryPassword = core.getInput('target_repository_password')
 
-    // Log the current timestamp, wait, then log the new timestamp
-    core.debug(new Date().toTimeString())
-    await wait(parseInt(ms, 10))
-    core.debug(new Date().toTimeString())
+    // 克隆源仓库
+    let cloneCommand = `git clone ${sourceRepositoryUrl} source-repo`
+    if (sourceRepositoryUsername && sourceRepositoryPassword) {
+      const authSourceUrl = sourceRepositoryUrl.replace('https://', `https://${sourceRepositoryUsername}:${sourceRepositoryPassword}@`)
+      cloneCommand = `git clone ${authSourceUrl} source-repo`
+    }
+    await exec.exec(cloneCommand)
 
-    // Set outputs for other workflow steps to use
-    core.setOutput('time', new Date().toTimeString())
+    // 进入源仓库目录
+    process.chdir('source-repo')
+
+    // 添加目标仓库为远程
+    let remoteAddCommand = `git remote add target ${targetRepositoryUrl}`
+    if (targetRepositoryUsername && targetRepositoryPassword) {
+      const authTargetUrl = targetRepositoryUrl.replace('https://', `https://${targetRepositoryUsername}:${targetRepositoryPassword}@`)
+      remoteAddCommand = `git remote add target ${authTargetUrl}`
+    }
+    await exec.exec(remoteAddCommand)
+
+    // 推送到目标仓库
+    await exec.exec('git push target --all')
+    await exec.exec('git push target --tags')
+
+    core.info('同步完成')
   } catch (error) {
     // Fail the workflow run if an error occurs
-    if (error instanceof Error) core.setFailed(error.message)
+    core.setFailed(`Action failed with error: ${error}`)
   }
 }
