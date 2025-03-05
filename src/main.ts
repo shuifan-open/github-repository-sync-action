@@ -1,5 +1,7 @@
 import * as core from '@actions/core'
 import * as exec from '@actions/exec'
+import * as fs from 'fs'
+import * as path from 'path'
 
 /**
  * The main function for the action.
@@ -8,42 +10,57 @@ import * as exec from '@actions/exec'
  */
 export async function run(): Promise<void> {
   try {
-    // 从 secrets 中获取源仓库信息
-    const sourceRepositoryUrl = core.getInput('source_repository_url', { required: true })
-    const sourceRepositoryUsername = core.getInput('source_repository_username')
-    const sourceRepositoryPassword = core.getInput('source_repository_password')
+    // 从变量中获取仓库URL列表
+    const sourceRepositoryUrlList = core.getInput('source_repository_url_list').split('\n').filter(Boolean)
+    const targetRepositoryUrlList = core.getInput('target_repository_url_list').split('\n').filter(Boolean)
 
-    // 从 secrets 中获取目标仓库信息
-    const targetRepositoryUrl = core.getInput('target_repository_url', { required: true })
-    const targetRepositoryUsername = core.getInput('target_repository_username')
-    const targetRepositoryPassword = core.getInput('target_repository_password')
+    // 从秘密中获取用户名和密码
+    const sourceUsername = core.getInput('source_repository_username')
+    const sourcePassword = core.getInput('source_repository_password')
+    const targetUsername = core.getInput('target_repository_username')
+    const targetPassword = core.getInput('target_repository_password')
 
-    // 克隆源仓库
-    let cloneCommand = `git clone ${sourceRepositoryUrl} source-repo`
-    if (sourceRepositoryUsername && sourceRepositoryPassword) {
-      const authSourceUrl = sourceRepositoryUrl.replace('https://', `https://${sourceRepositoryUsername}:${sourceRepositoryPassword}@`)
-      cloneCommand = `git clone ${authSourceUrl} source-repo`
+    if (sourceRepositoryUrlList.length !== targetRepositoryUrlList.length) {
+      throw new Error('Source and target repository lists must have the same length.')
     }
-    await exec.exec(cloneCommand)
 
-    // 进入源仓库目录
-    process.chdir('source-repo')
+    // 并发同步每对仓库
+    await Promise.all(sourceRepositoryUrlList.map(async (sourceUrl, index) => {
+      const targetUrl = targetRepositoryUrlList[index]
+      const repoName = path.basename(sourceUrl, '.git')
+      const cloneDir = path.join(process.cwd(), repoName)
 
-    // 添加目标仓库为远程
-    let remoteAddCommand = `git remote add target ${targetRepositoryUrl}`
-    if (targetRepositoryUsername && targetRepositoryPassword) {
-      const authTargetUrl = targetRepositoryUrl.replace('https://', `https://${targetRepositoryUsername}:${targetRepositoryPassword}@`)
-      remoteAddCommand = `git remote add target ${authTargetUrl}`
-    }
-    await exec.exec(remoteAddCommand)
+      // 克隆源仓库
+      await exec.exec('git', ['clone', sourceUrl, cloneDir], {
+        env: {
+          ...process.env,
+          GIT_ASKPASS: 'echo',
+          GIT_USERNAME: sourceUsername,
+          GIT_PASSWORD: sourcePassword
+        }
+      })
 
-    // 推送到目标仓库
-    await exec.exec('git push target --all')
-    await exec.exec('git push target --tags')
+      // 推送到目标仓库
+      await exec.exec('git', ['remote', 'set-url', 'origin', targetUrl], { cwd: cloneDir })
+      await exec.exec('git', ['push', '--all'], {
+        cwd: cloneDir,
+        env: {
+          ...process.env,
+          GIT_ASKPASS: 'echo',
+          GIT_USERNAME: targetUsername,
+          GIT_PASSWORD: targetPassword
+        }
+      })
 
-    core.info('同步完成')
+      // 删除克隆的目录
+      fs.rmSync(cloneDir, { recursive: true, force: true })
+    }))
+
+    core.info('All repositories have been synchronized successfully.')
   } catch (error) {
     // Fail the workflow run if an error occurs
     core.setFailed(`Action failed with error: ${error}`)
   }
 }
+
+run()

@@ -9,8 +9,8 @@ branding:
 
 # Define your inputs here.
 inputs:
-  source_repository_url:
-    description: 'Source repository URL'
+  source_repository_url_list:
+    description: 'List of source repository URLs, one per line'
     required: true
   source_repository_username:
     description: 'Source repository username'
@@ -18,8 +18,8 @@ inputs:
   source_repository_password:
     description: 'Source repository password'
     required: false
-  target_repository_url:
-    description: 'Target repository URL'
+  target_repository_url_list:
+    description: 'List of target repository URLs, one per line'
     required: true
   target_repository_username:
     description: 'Target repository username'
@@ -31,7 +31,7 @@ inputs:
 # Define your outputs here.
 outputs:
   time:
-    description: Your output description here
+    description: 'The time the action was run'
 
 runs:
   using: 'node20'
