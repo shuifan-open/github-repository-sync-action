@@ -31,7 +31,11 @@ export async function run(): Promise<void> {
       const cloneDir = path.join(process.cwd(), repoName)
 
       // 克隆源仓库
-      await exec.exec('git', ['clone', sourceUrl, cloneDir], {
+      let finalSourceUrl = sourceUrl
+      if (sourceUsername && sourcePassword) {
+        finalSourceUrl = sourceUrl.replace('https://', `https://${sourceUsername}:${sourcePassword}@`)
+      }
+      await exec.exec('git', ['clone', finalSourceUrl, cloneDir], {
         env: {
           ...process.env,
           GIT_ASKPASS: 'echo',
@@ -41,7 +45,11 @@ export async function run(): Promise<void> {
       })
 
       // 推送到目标仓库
-      await exec.exec('git', ['remote', 'set-url', 'origin', targetUrl], { cwd: cloneDir })
+      let finalTargetUrl = targetUrl
+      if (targetUsername && targetPassword) {
+        finalTargetUrl = targetUrl.replace('https://', `https://${targetUsername}:${targetPassword}@`)
+      }
+      await exec.exec('git', ['remote', 'set-url', 'origin', finalTargetUrl], { cwd: cloneDir })
       await exec.exec('git', ['push', '--all'], {
         cwd: cloneDir,
         env: {
