@@ -27332,8 +27332,6 @@ async function run() {
         coreExports.setFailed(`Action failed with error: ${error}`);
     }
 }
-// 运行主函数
-run();
 
 /**
  * The entrypoint for the action. This file simply imports and runs the action's

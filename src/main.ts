@@ -15,7 +15,6 @@ export async function run(): Promise<void> {
       .getInput('source_repository_url_list')
       .split('\n')
       .filter(Boolean)
-    console.log("---sourceRepositoryUrlList---", sourceRepositoryUrlList)
     const targetRepositoryUrlList = core
       .getInput('target_repository_url_list')
       .split('\n')
@@ -122,6 +121,3 @@ export async function run(): Promise<void> {
     core.setFailed(`Action failed with error: ${error}`)
   }
 }
-
-// 运行主函数
-// run()
