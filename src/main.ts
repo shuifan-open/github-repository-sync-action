@@ -37,6 +37,12 @@ export async function run(): Promise<void> {
       const repoName = path.basename(sourceUrl, '.git') // 获取仓库名
       const cloneDir = path.join(process.cwd(), repoName) // 定义克隆目录
 
+      // 检查 cloneDir 是否存在
+      if (fs.existsSync(cloneDir)) {
+        core.info(`Directory ${cloneDir} already exists. Skipping synchronization for ${sourceUrl}.`)
+        return
+      }
+
       // 克隆源仓库
       let finalSourceUrl = sourceUrl
       if (sourceUsername && sourcePassword) {
