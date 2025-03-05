@@ -1,0 +1,40 @@
+name: test sync
+
+on:
+  pull_request:
+    branches:
+      - main
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Build the action
+        run: npm run package
+
+      - name: Run synchronization
+        uses: ./
+        with:
+          source_repository_url_list: ${{ vars.SOURCE_REPOSITORY_URL_LIST }}
+          source_repository_username: ${{ secrets.SOURCE_REPOSITORY_USERNAME }}
+          source_repository_password: ${{ secrets.SOURCE_REPOSITORY_PASSWORD }}
+          target_repository_url_list: ${{ vars.TARGET_REPOSITORY_URL_LIST }}
+          target_repository_username: ${{ secrets.TARGET_REPOSITORY_USERNAME }}
+          target_repository_password: ${{ secrets.TARGET_REPOSITORY_PASSWORD }}
