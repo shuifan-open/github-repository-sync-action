@@ -14,6 +14,12 @@ export async function run(): Promise<void> {
     const sourceRepositoryUrlList = core.getInput('source_repository_url_list').split('\n').filter(Boolean)
     const targetRepositoryUrlList = core.getInput('target_repository_url_list').split('\n').filter(Boolean)
 
+    // 检查是否有重复的 URL
+    const uniqueSourceUrls = new Set(sourceRepositoryUrlList)
+    if (uniqueSourceUrls.size !== sourceRepositoryUrlList.length) {
+      throw new Error('Duplicate URLs found in source repository list.')
+    }
+
     // 从秘密中获取源和目标仓库的用户名和密码
     const sourceUsername = core.getInput('source_repository_username')
     const sourcePassword = core.getInput('source_repository_password')
