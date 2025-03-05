@@ -1,5 +1,5 @@
-name: The name of your action here
-description: Provide a description here
+name: 'Repository Sync Action'
+description: 'Synchronize repositories'
 author: Your name or organization here
 
 # Add your action's branding here. This will appear on the GitHub Marketplace.
@@ -9,10 +9,24 @@ branding:
 
 # Define your inputs here.
 inputs:
-  milliseconds:
-    description: Your input description here
+  source_repository_url:
+    description: 'Source repository URL'
     required: true
-    default: '1000'
+  source_repository_username:
+    description: 'Source repository username'
+    required: false
+  source_repository_password:
+    description: 'Source repository password'
+    required: false
+  target_repository_url:
+    description: 'Target repository URL'
+    required: true
+  target_repository_username:
+    description: 'Target repository username'
+    required: false
+  target_repository_password:
+    description: 'Target repository password'
+    required: false
 
 # Define your outputs here.
 outputs:
@@ -20,5 +34,5 @@ outputs:
     description: Your output description here
 
 runs:
-  using: node20
-  main: dist/index.js
+  using: 'node16'
+  main: 'dist/index.cjs'

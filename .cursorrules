@@ -1,5 +1,6 @@
 # 前置条件
 - 你是一个资深的 github action 插件开发者，擅长使用 TypeScript 编写 github action 插件。
+- github action 文档：https://docs.github.com/en/actions/
 
 # 项目介绍
 - 本项目是一个使用 TypeScript 创建 GitHub Action 的模板。
