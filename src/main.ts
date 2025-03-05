@@ -15,6 +15,7 @@ export async function run(): Promise<void> {
       .getInput('source_repository_url_list')
       .split('\n')
       .filter(Boolean)
+    console.log("---sourceRepositoryUrlList---", sourceRepositoryUrlList)
     const targetRepositoryUrlList = core
       .getInput('target_repository_url_list')
       .split('\n')
