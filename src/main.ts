@@ -91,6 +91,11 @@ export async function run(): Promise<void> {
             core.info(`Skipping branch ${branchName} as it starts with HEAD or contains spaces.`)
             continue
           }
+          // 检查分支名是否与本地文件名冲突
+          if (fs.existsSync(path.join(cloneDir, branchName))) {
+            core.info(`Skipping branch ${branchName} as it conflicts with a local file name.`)
+            continue
+          }
           await exec.exec('git', ['checkout', branchName], { cwd: cloneDir }) // 检出每个分支
         }
 
