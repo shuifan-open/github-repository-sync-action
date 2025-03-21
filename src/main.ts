@@ -86,9 +86,9 @@ export async function run(): Promise<void> {
             continue
           }
           const branchName = branch.trim().replace('origin/', '') // 获取分支名称
-          // 如果分支名是HEAD，跳过
-          if (branchName === 'HEAD') {
-            core.info(`Skipping branch ${branchName} as it is HEAD.`)
+          // 如果分支名以HEAD开头的字符串或有空格，跳过
+          if (branchName.startsWith('HEAD') || branchName.includes(' ')) {
+            core.info(`Skipping branch ${branchName} as it starts with HEAD or contains spaces.`)
             continue
           }
           await exec.exec('git', ['checkout', branchName], { cwd: cloneDir }) // 检出每个分支
