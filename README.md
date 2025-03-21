@@ -42,7 +42,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Run Repository Sync Action
-        uses: NullPointExceptionForEveryone/github-repository-sync-action@v2.0.0
+        uses: NullPointExceptionForEveryone/github-repository-sync-action@v2
         with:
           source_repository_url_list: ${{ vars.SOURCE_REPOSITORY_URL_LIST }}
           source_repository_username: ${{ secrets.SOURCE_REPOSITORY_USERNAME }}
