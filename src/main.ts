@@ -77,7 +77,9 @@ export async function run(): Promise<void> {
         const branches = await exec.getExecOutput('git', ['branch', '-r'], { cwd: cloneDir }) // 获取远程分支列表
         const branchList = branches.stdout.split('\n').filter(branch => branch) // 处理分支列表
 
-        for (const branch of branchList) {
+        for (let branch of branchList) {
+          // branch去除首尾空格
+          branch = branch.trim(); // 去除首尾空格
           // 如果不是origin仓库的分支，跳过
           if (!branch.startsWith('origin/')) {
             core.info(`Skipping branch ${branch} as it is not from origin.`)
