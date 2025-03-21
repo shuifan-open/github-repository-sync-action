@@ -72,6 +72,26 @@ export async function run(): Promise<void> {
           }
         })
 
+        // 检出所有分支
+        await exec.exec('git', ['fetch', '--all'], { cwd: cloneDir }) // 获取所有分支
+        const branches = await exec.getExecOutput('git', ['branch', '-r'], { cwd: cloneDir }) // 获取远程分支列表
+        const branchList = branches.stdout.split('\n').filter(branch => branch) // 处理分支列表
+
+        for (const branch of branchList) {
+          // 如果不是origin仓库的分支，跳过
+          if (!branch.startsWith('origin/')) {
+            core.info(`Skipping branch ${branch} as it is not from origin.`)
+            continue
+          }
+          const branchName = branch.trim().replace('origin/', '') // 获取分支名称
+          // 如果分支名是HEAD，跳过
+          if (branchName === 'HEAD') {
+            core.info(`Skipping branch ${branchName} as it is HEAD.`)
+            continue
+          }
+          await exec.exec('git', ['checkout', branchName], { cwd: cloneDir }) // 检出每个分支
+        }
+
         // 设置目标仓库的远程URL
         let finalTargetUrl = targetUrl
         if (targetUsername && targetPassword) {
