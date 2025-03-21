@@ -27294,6 +27294,26 @@ async function run() {
                     GIT_PASSWORD: sourcePassword
                 }
             });
+            // 检出所有分支
+            await execExports.exec('git', ['fetch', '--all'], { cwd: cloneDir }); // 获取所有分支
+            const branches = await execExports.getExecOutput('git', ['branch', '-r'], { cwd: cloneDir }); // 获取远程分支列表
+            const branchList = branches.stdout.split('\n').filter(branch => branch); // 处理分支列表
+            for (let branch of branchList) {
+                // branch去除首尾空格
+                branch = branch.trim(); // 去除首尾空格
+                // 如果不是origin仓库的分支，跳过
+                if (!branch.startsWith('origin/')) {
+                    coreExports.info(`Skipping branch ${branch} as it is not from origin.`);
+                    continue;
+                }
+                const branchName = branch.trim().replace('origin/', ''); // 获取分支名称
+                // 如果分支名以HEAD开头的字符串或有空格，跳过
+                if (branchName.startsWith('HEAD') || branchName.includes(' ')) {
+                    coreExports.info(`Skipping branch ${branchName} as it starts with HEAD or contains spaces.`);
+                    continue;
+                }
+                await execExports.exec('git', ['checkout', branchName], { cwd: cloneDir }); // 检出每个分支
+            }
             // 设置目标仓库的远程URL
             let finalTargetUrl = targetUrl;
             if (targetUsername && targetPassword) {

@@ -68,6 +68,31 @@ jobs:
 - `.github/workflows/`：包含 GitHub Actions 工作流配置。
 - `script/`：包含辅助脚本，如发布脚本。
 
+## 构建项目
+
+要构建项目，请按照以下步骤操作：
+
+1. **安装依赖**：
+   在项目根目录下运行以下命令以安装所需的依赖：
+
+   ```bash
+   npm install
+   ```
+2. **构建项目**：
+   使用以下命令构建 TypeScript 代码：
+
+   ```bash
+   npm run build
+   ```
+3. **打包项目**：
+   使用 ncc 打包项目以供分发：
+
+   ```bash
+   npm run package
+   ```
+
+确保在构建之前已正确配置 Node.js 环境，并安装了所需的工具。
+
 ## 贡献指南
 
 欢迎对本项目进行贡献！请提交 Pull Request 或报告 Issue。
