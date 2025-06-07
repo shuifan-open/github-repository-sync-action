@@ -141,7 +141,7 @@ export async function run(): Promise<void> {
         })
 
         // 推送所有标签到目标仓库
-        await exec.exec('git', ['push', '--tags'], {
+        await exec.exec('git', ['push', '--tags', forcePush ? '-f' : ''], {
           cwd: cloneDir,
           env: {
             ...process.env,
