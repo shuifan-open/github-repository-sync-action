@@ -74,12 +74,16 @@ export async function run(): Promise<void> {
 
         // 检出所有分支
         await exec.exec('git', ['fetch', '--all'], { cwd: cloneDir }) // 获取所有分支
-        const branches = await exec.getExecOutput('git', ['branch', '-r'], { cwd: cloneDir }) // 获取远程分支列表
-        const branchList = branches.stdout.split('\n').filter(branch => branch) // 处理分支列表
+        const branches = await exec.getExecOutput('git', ['branch', '-r'], {
+          cwd: cloneDir
+        }) // 获取远程分支列表
+        const branchList = branches.stdout
+          .split('\n')
+          .filter((branch) => branch) // 处理分支列表
 
         for (let branch of branchList) {
           // branch去除首尾空格
-          branch = branch.trim(); // 去除首尾空格
+          branch = branch.trim() // 去除首尾空格
           // 如果不是origin仓库的分支，跳过
           if (!branch.startsWith('origin/')) {
             core.info(`Skipping branch ${branch} as it is not from origin.`)
@@ -88,12 +92,16 @@ export async function run(): Promise<void> {
           const branchName = branch.trim().replace('origin/', '') // 获取分支名称
           // 如果分支名以HEAD开头的字符串或有空格，跳过
           if (branchName.startsWith('HEAD') || branchName.includes(' ')) {
-            core.info(`Skipping branch ${branchName} as it starts with HEAD or contains spaces.`)
+            core.info(
+              `Skipping branch ${branchName} as it starts with HEAD or contains spaces.`
+            )
             continue
           }
           // 检查分支名是否与本地文件名冲突
           if (fs.existsSync(path.join(cloneDir, branchName))) {
-            core.info(`Skipping branch ${branchName} as it conflicts with a local file name.`)
+            core.info(
+              `Skipping branch ${branchName} as it conflicts with a local file name.`
+            )
             continue
           }
           await exec.exec('git', ['checkout', branchName], { cwd: cloneDir }) // 检出每个分支
@@ -139,7 +147,10 @@ export async function run(): Promise<void> {
         // 删除克隆的目录以清理空间
         fs.rmSync(cloneDir, { recursive: true, force: true })
       })
-    )
+    ).catch((error) => {
+      // 如果有错误发生，打印错误日志
+      core.error(`Error occurred during synchronization: ${error}`)
+    })
 
     // 如果所有仓库同步成功，记录信息
     core.info('All repositories have been synchronized successfully.')
