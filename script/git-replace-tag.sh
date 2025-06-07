@@ -2,6 +2,8 @@
 releaseTagName=v2
 # 当前tag名称
 currentTagName=v2.0.2
+# 当前目录
+echo $(pwd)
 # 删除本地release tag
 git tag -d $releaseTagName
 # 删除远程release tag
