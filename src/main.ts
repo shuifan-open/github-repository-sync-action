@@ -128,9 +128,13 @@ export async function run(): Promise<void> {
 
         // 如果目标地址在强制推动列表里面里面，强制推送
         const forcePush = targetRepositoryForceUrlList.includes(targetUrl)
+        const pushRepositoryParamList = ['push', '--all']
+        if (forcePush) {
+          pushRepositoryParamList.push('--force')
+        }
 
         // 推送所有分支到目标仓库
-        await exec.exec('git', ['push', '--all', forcePush ? '-f' : ''], {
+        await exec.exec('git', pushRepositoryParamList, {
           cwd: cloneDir,
           env: {
             ...process.env,
@@ -140,8 +144,14 @@ export async function run(): Promise<void> {
           }
         })
 
+        //
+        const pushTagParamList = ['push', '--tags']
+        if (forcePush) {
+          pushTagParamList.push('--force')
+        }
+
         // 推送所有标签到目标仓库
-        await exec.exec('git', ['push', '--tags', forcePush ? '-f' : ''], {
+        await exec.exec('git', pushTagParamList, {
           cwd: cloneDir,
           env: {
             ...process.env,
