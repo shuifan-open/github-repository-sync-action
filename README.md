@@ -33,23 +33,37 @@
 name: Repository Sync
 
 on:
+  workflow_dispatch:
   push:
     branches:
       - main
+  schedule:
+    - cron: "0 0 * * *"
 
 jobs:
   sync:
     runs-on: ubuntu-latest
     steps:
-      - name: Run Repository Sync Action
+      - name: sync
         uses: shuifan-open/github-repository-sync-action@v2
         with:
+          ## 源仓库
+          # 地址列表
           source_repository_url_list: ${{ vars.SOURCE_REPOSITORY_URL_LIST }}
+          # 用户名，可以没有
           source_repository_username: ${{ secrets.SOURCE_REPOSITORY_USERNAME }}
+          # 密码，可以没有
           source_repository_password: ${{ secrets.SOURCE_REPOSITORY_PASSWORD }}
+          ## 目标仓库
+          # 地址列表
           target_repository_url_list: ${{ vars.TARGET_REPOSITORY_URL_LIST }}
+          # 用户名，可以没有
           target_repository_username: ${{ secrets.TARGET_REPOSITORY_USERNAME }}
+          # 密码，可以没有
           target_repository_password: ${{ secrets.TARGET_REPOSITORY_PASSWORD }}
+          # 直接覆盖的仓库地址列表
+          target_repository_force_url_list: ${{ secrets.TARGET_REPOSITORY_FORCE_URL_LIST }}
+
 ```
 
 在这个示例中，工作流会在 `main` 分支有推送时触发，使用 `github-repository-sync-action` 来同步代码仓库。
