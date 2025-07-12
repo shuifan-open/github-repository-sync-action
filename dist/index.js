@@ -27251,12 +27251,15 @@ async function run() {
     try {
         // 从变量中获取源和目标仓库的URL列表，并过滤掉空行
         const sourceRepositoryUrlList = coreExports.getInput('source_repository_url_list')
+            .replace(/\r\n/g, '\n') // 先统一替换为 \n
             .split('\n')
             .filter(Boolean);
         const targetRepositoryUrlList = coreExports.getInput('target_repository_url_list')
+            .replace(/\r\n/g, '\n') // 先统一替换为 \n
             .split('\n')
             .filter(Boolean);
         const targetRepositoryForceUrlList = coreExports.getInput('target_repository_force_url_list')
+            .replace(/\r\n/g, '\n') // 先统一替换为 \n
             .split('\n')
             .filter(Boolean);
         coreExports.info(`sourceRepositoryUrlList: ${sourceRepositoryUrlList}`);
@@ -27307,6 +27310,7 @@ async function run() {
                 cwd: cloneDir
             }); // 获取远程分支列表
             const branchList = branches.stdout
+                .replace(/\r\n/g, '\n') // 先统一替换为 \n
                 .split('\n')
                 .filter((branch) => branch); // 处理分支列表
             for (let branch of branchList) {
