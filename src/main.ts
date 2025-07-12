@@ -24,10 +24,6 @@ export async function run(): Promise<void> {
       .split('\n')
       .filter(Boolean)
 
-    core.info(`sourceRepositoryUrlList: ${sourceRepositoryUrlList}`)
-    core.info(`targetRepositoryUrlList: ${targetRepositoryUrlList}`)
-    core.info(`targetRepositoryForceUrlList: ${targetRepositoryForceUrlList}`)
-
     // 检查是否有重复的 URL
     const uniqueSourceUrls = new Set(sourceRepositoryUrlList)
     if (uniqueSourceUrls.size !== sourceRepositoryUrlList.length) {

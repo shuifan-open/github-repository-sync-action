@@ -27485,9 +27485,6 @@ async function run() {
         const targetRepositoryForceUrlList = _actions_core__WEBPACK_IMPORTED_MODULE_0__.getInput('target_repository_force_url_list')
             .split('\n')
             .filter(Boolean);
-        _actions_core__WEBPACK_IMPORTED_MODULE_0__.info(`sourceRepositoryUrlList: ${sourceRepositoryUrlList}`);
-        _actions_core__WEBPACK_IMPORTED_MODULE_0__.info(`targetRepositoryUrlList: ${targetRepositoryUrlList}`);
-        _actions_core__WEBPACK_IMPORTED_MODULE_0__.info(`targetRepositoryForceUrlList: ${targetRepositoryForceUrlList}`);
         // 检查是否有重复的 URL
         const uniqueSourceUrls = new Set(sourceRepositoryUrlList);
         if (uniqueSourceUrls.size !== sourceRepositoryUrlList.length) {
