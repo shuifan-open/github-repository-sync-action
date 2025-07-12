@@ -47,8 +47,9 @@ export async function run(): Promise<void> {
     await Promise.all(
       sourceRepositoryUrlList.map(async (sourceUrl, index) => {
         const targetUrl = targetRepositoryUrlList[index]
-        const repoName = path.basename(sourceUrl, '.git') // 获取仓库名
-        const cloneDir = path.join(process.cwd(), repoName) // 定义克隆目录
+        // const repoName = path.basename(sourceUrl, '.git') // 获取仓库名
+        const cloneDirName = sourceUrl.replace(/\.|:|\//g, "-")
+        const cloneDir = path.join(process.cwd(), cloneDirName) // 定义克隆目录
 
         // 检查 cloneDir 是否存在
         if (fs.existsSync(cloneDir)) {
