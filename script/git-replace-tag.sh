@@ -1,7 +1,7 @@
 # release tag名称
 releaseTagName=v2
 # 当前tag名称
-currentTagName=v2.0.2
+currentTagName=v2.0.3
 # 当前目录
 echo $(pwd)
 # 删除本地release tag
