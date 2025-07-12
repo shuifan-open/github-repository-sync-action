@@ -27259,6 +27259,9 @@ async function run() {
         const targetRepositoryForceUrlList = coreExports.getInput('target_repository_force_url_list')
             .split('\n')
             .filter(Boolean);
+        coreExports.info(`sourceRepositoryUrlList: ${sourceRepositoryUrlList}`);
+        coreExports.info(`target_repository_url_list: ${targetRepositoryUrlList}`);
+        coreExports.info(`target_repository_force_url_list: ${targetRepositoryForceUrlList}`);
         // 检查是否有重复的 URL
         const uniqueSourceUrls = new Set(sourceRepositoryUrlList);
         if (uniqueSourceUrls.size !== sourceRepositoryUrlList.length) {
