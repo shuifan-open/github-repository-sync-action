@@ -26,11 +26,17 @@ export async function run(): Promise<void> {
       .replace(/\r\n/g, '\n') // 先统一替换为 \n
       .split('\n')
       .filter(Boolean)
+    const targetRepositoryNotCheckAllBranchUrlList = core
+      .getInput('target_repository_not_check_all_branch_url_list')
+      .replace(/\r\n/g, '\n') // 先统一替换为 \n
+      .split('\n')
+      .filter(Boolean)
 
-      core.info(`sourceRepositoryUrlList: ${sourceRepositoryUrlList}`)
-      core.info(`target_repository_url_list: ${targetRepositoryUrlList}`)
-      core.info(`target_repository_force_url_list: ${targetRepositoryForceUrlList}`)
-      
+    core.info(`sourceRepositoryUrlList: ${sourceRepositoryUrlList}`)
+    core.info(`targetRepositoryUrlList: ${targetRepositoryUrlList}`)
+    core.info(`targetRepositoryForceUrlList: ${targetRepositoryForceUrlList}`)
+    core.info(`targetRepositoryNotCheckAllBranchUrlList: ${targetRepositoryNotCheckAllBranchUrlList}`)
+
     // 检查是否有重复的 URL
     const uniqueSourceUrls = new Set(sourceRepositoryUrlList)
     if (uniqueSourceUrls.size !== sourceRepositoryUrlList.length) {
@@ -84,40 +90,45 @@ export async function run(): Promise<void> {
           }
         })
 
-        // 检出所有分支
-        await exec.exec('git', ['fetch', '--all'], { cwd: cloneDir }) // 获取所有分支
-        const branches = await exec.getExecOutput('git', ['branch', '-r'], {
-          cwd: cloneDir
-        }) // 获取远程分支列表
-        const branchList = branches.stdout
-          .replace(/\r\n/g, '\n') // 先统一替换为 \n
-          .split('\n')
-          .filter((branch) => branch) // 处理分支列表
+        // 是否检出所有分支
+        const checkAllBranch = !targetRepositoryNotCheckAllBranchUrlList.includes(targetUrl)
 
-        for (let branch of branchList) {
-          // branch去除首尾空格
-          branch = branch.trim() // 去除首尾空格
-          // 如果不是origin仓库的分支，跳过
-          if (!branch.startsWith('origin/')) {
-            core.info(`Skipping branch ${branch} as it is not from origin.`)
-            continue
+        // 检出所有分支
+        if (checkAllBranch) {
+          await exec.exec('git', ['fetch', '--all'], { cwd: cloneDir }) // 获取所有分支
+          const branches = await exec.getExecOutput('git', ['branch', '-r'], {
+            cwd: cloneDir
+          }) // 获取远程分支列表
+          const branchList = branches.stdout
+            .replace(/\r\n/g, '\n') // 先统一替换为 \n
+            .split('\n')
+            .filter((branch) => branch) // 处理分支列表
+
+          for (let branch of branchList) {
+            // branch去除首尾空格
+            branch = branch.trim() // 去除首尾空格
+            // 如果不是origin仓库的分支，跳过
+            if (!branch.startsWith('origin/')) {
+              core.info(`Skipping branch ${branch} as it is not from origin.`)
+              continue
+            }
+            const branchName = branch.trim().replace('origin/', '') // 获取分支名称
+            // 如果分支名以HEAD开头的字符串或有空格，跳过
+            if (branchName.startsWith('HEAD') || branchName.includes(' ')) {
+              core.info(
+                `Skipping branch ${branchName} as it starts with HEAD or contains spaces.`
+              )
+              continue
+            }
+            // 检查分支名是否与本地文件名冲突
+            if (fs.existsSync(path.join(cloneDir, branchName))) {
+              core.info(
+                `Skipping branch ${branchName} as it conflicts with a local file name.`
+              )
+              continue
+            }
+            await exec.exec('git', ['checkout', branchName], { cwd: cloneDir }) // 检出每个分支
           }
-          const branchName = branch.trim().replace('origin/', '') // 获取分支名称
-          // 如果分支名以HEAD开头的字符串或有空格，跳过
-          if (branchName.startsWith('HEAD') || branchName.includes(' ')) {
-            core.info(
-              `Skipping branch ${branchName} as it starts with HEAD or contains spaces.`
-            )
-            continue
-          }
-          // 检查分支名是否与本地文件名冲突
-          if (fs.existsSync(path.join(cloneDir, branchName))) {
-            core.info(
-              `Skipping branch ${branchName} as it conflicts with a local file name.`
-            )
-            continue
-          }
-          await exec.exec('git', ['checkout', branchName], { cwd: cloneDir }) // 检出每个分支
         }
 
         // 设置目标仓库的远程URL

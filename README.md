@@ -61,8 +61,11 @@ jobs:
           target_repository_username: ${{ secrets.TARGET_REPOSITORY_USERNAME }}
           # 密码，可以没有
           target_repository_password: ${{ secrets.TARGET_REPOSITORY_PASSWORD }}
+          ## 额外信息
           # 直接覆盖的仓库地址列表
           target_repository_force_url_list: ${{ secrets.TARGET_REPOSITORY_FORCE_URL_LIST }}
+          # 不同步所有分支的列表
+          target_repository_not_check_all_branch_url_list: ${{ vars.TARGET_REPOSITORY_NOT_CHECK_ALL_BRANCH_URL_LIST }}
 
 ```
 

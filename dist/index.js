@@ -27262,9 +27262,14 @@ async function run() {
             .replace(/\r\n/g, '\n') // 先统一替换为 \n
             .split('\n')
             .filter(Boolean);
+        const targetRepositoryNotCheckAllBranchUrlList = coreExports.getInput('target_repository_not_check_all_branch_url_list')
+            .replace(/\r\n/g, '\n') // 先统一替换为 \n
+            .split('\n')
+            .filter(Boolean);
         coreExports.info(`sourceRepositoryUrlList: ${sourceRepositoryUrlList}`);
-        coreExports.info(`target_repository_url_list: ${targetRepositoryUrlList}`);
-        coreExports.info(`target_repository_force_url_list: ${targetRepositoryForceUrlList}`);
+        coreExports.info(`targetRepositoryUrlList: ${targetRepositoryUrlList}`);
+        coreExports.info(`targetRepositoryForceUrlList: ${targetRepositoryForceUrlList}`);
+        coreExports.info(`targetRepositoryNotCheckAllBranchUrlList: ${targetRepositoryNotCheckAllBranchUrlList}`);
         // 检查是否有重复的 URL
         const uniqueSourceUrls = new Set(sourceRepositoryUrlList);
         if (uniqueSourceUrls.size !== sourceRepositoryUrlList.length) {
@@ -27304,35 +27309,39 @@ async function run() {
                     GIT_PASSWORD: sourcePassword
                 }
             });
+            // 是否检出所有分支
+            const checkAllBranch = !targetRepositoryNotCheckAllBranchUrlList.includes(targetUrl);
             // 检出所有分支
-            await execExports.exec('git', ['fetch', '--all'], { cwd: cloneDir }); // 获取所有分支
-            const branches = await execExports.getExecOutput('git', ['branch', '-r'], {
-                cwd: cloneDir
-            }); // 获取远程分支列表
-            const branchList = branches.stdout
-                .replace(/\r\n/g, '\n') // 先统一替换为 \n
-                .split('\n')
-                .filter((branch) => branch); // 处理分支列表
-            for (let branch of branchList) {
-                // branch去除首尾空格
-                branch = branch.trim(); // 去除首尾空格
-                // 如果不是origin仓库的分支，跳过
-                if (!branch.startsWith('origin/')) {
-                    coreExports.info(`Skipping branch ${branch} as it is not from origin.`);
-                    continue;
+            if (checkAllBranch) {
+                await execExports.exec('git', ['fetch', '--all'], { cwd: cloneDir }); // 获取所有分支
+                const branches = await execExports.getExecOutput('git', ['branch', '-r'], {
+                    cwd: cloneDir
+                }); // 获取远程分支列表
+                const branchList = branches.stdout
+                    .replace(/\r\n/g, '\n') // 先统一替换为 \n
+                    .split('\n')
+                    .filter((branch) => branch); // 处理分支列表
+                for (let branch of branchList) {
+                    // branch去除首尾空格
+                    branch = branch.trim(); // 去除首尾空格
+                    // 如果不是origin仓库的分支，跳过
+                    if (!branch.startsWith('origin/')) {
+                        coreExports.info(`Skipping branch ${branch} as it is not from origin.`);
+                        continue;
+                    }
+                    const branchName = branch.trim().replace('origin/', ''); // 获取分支名称
+                    // 如果分支名以HEAD开头的字符串或有空格，跳过
+                    if (branchName.startsWith('HEAD') || branchName.includes(' ')) {
+                        coreExports.info(`Skipping branch ${branchName} as it starts with HEAD or contains spaces.`);
+                        continue;
+                    }
+                    // 检查分支名是否与本地文件名冲突
+                    if (fs.existsSync(require$$1.join(cloneDir, branchName))) {
+                        coreExports.info(`Skipping branch ${branchName} as it conflicts with a local file name.`);
+                        continue;
+                    }
+                    await execExports.exec('git', ['checkout', branchName], { cwd: cloneDir }); // 检出每个分支
                 }
-                const branchName = branch.trim().replace('origin/', ''); // 获取分支名称
-                // 如果分支名以HEAD开头的字符串或有空格，跳过
-                if (branchName.startsWith('HEAD') || branchName.includes(' ')) {
-                    coreExports.info(`Skipping branch ${branchName} as it starts with HEAD or contains spaces.`);
-                    continue;
-                }
-                // 检查分支名是否与本地文件名冲突
-                if (fs.existsSync(require$$1.join(cloneDir, branchName))) {
-                    coreExports.info(`Skipping branch ${branchName} as it conflicts with a local file name.`);
-                    continue;
-                }
-                await execExports.exec('git', ['checkout', branchName], { cwd: cloneDir }); // 检出每个分支
             }
             // 设置目标仓库的远程URL
             let finalTargetUrl = targetUrl;
