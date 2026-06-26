@@ -16,6 +16,7 @@ export async function run(): Promise<void> {
       core.getInput('secret_config')
     )
     if (!!!secretConfig) {
+      core.info(`secretConfig not exists`)
       throw new Error('secretConfig not exists')
     }
     // 明文参数
@@ -23,6 +24,7 @@ export async function run(): Promise<void> {
       core.getInput('variable_config')
     )
     if (!!!variableConfig) {
+      core.info(`variableConfig not exists`)
       throw new Error('variableConfig not exists')
     }
 

@@ -27508,11 +27508,13 @@ async function run() {
         // 密文参数
         const secretConfig = parseSecretConfig(core.getInput('secret_config'));
         if (!!!secretConfig) {
+            core.info(`secretConfig not exists`);
             throw new Error('secretConfig not exists');
         }
         // 明文参数
         const variableConfig = parseVariableConfig(core.getInput('variable_config'));
         if (!!!variableConfig) {
+            core.info(`variableConfig not exists`);
             throw new Error('variableConfig not exists');
         }
         core.info(`variableConfig: ${stringify(variableConfig)}`);
