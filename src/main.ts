@@ -2,6 +2,7 @@ import * as core from '@actions/core'
 import * as exec from '@actions/exec'
 import * as fs from 'fs'
 import * as path from 'path'
+import * as objDefine from './objDefine.js'
 
 /**
  * The main function for the action.
@@ -10,58 +11,47 @@ import * as path from 'path'
  */
 export async function run(): Promise<void> {
   try {
-    // 从变量中获取源和目标仓库的URL列表，并过滤掉空行
-    const sourceRepositoryUrlList = core
-      .getInput('source_repository_url_list')
-      .replace(/\r\n/g, '\n') // 先统一替换为 \n
-      .split('\n')
-      .filter(Boolean)
-    const targetRepositoryUrlList = core
-      .getInput('target_repository_url_list')
-      .replace(/\r\n/g, '\n') // 先统一替换为 \n
-      .split('\n')
-      .filter(Boolean)
-    const targetRepositoryForceUrlList = core
-      .getInput('target_repository_force_url_list')
-      .replace(/\r\n/g, '\n') // 先统一替换为 \n
-      .split('\n')
-      .filter(Boolean)
-    const targetRepositoryNotCheckAllBranchUrlList = core
-      .getInput('target_repository_not_check_all_branch_url_list')
-      .replace(/\r\n/g, '\n') // 先统一替换为 \n
-      .split('\n')
-      .filter(Boolean)
+    // 密文参数
+    const secretConfig = objDefine.parseSecretConfig(
+      core.getInput('secret_config')
+    )
+    if (!!!secretConfig) {
+      throw new Error('secretConfig not exists')
+    }
+    // 明文参数
+    const variableConfig = objDefine.parseVariableConfig(
+      core.getInput('variable_config')
+    )
+    if (!!!variableConfig) {
+      throw new Error('variableConfig not exists')
+    }
 
-    core.info(`sourceRepositoryUrlList: ${sourceRepositoryUrlList}`)
-    core.info(`targetRepositoryUrlList: ${targetRepositoryUrlList}`)
-    core.info(`targetRepositoryForceUrlList: ${targetRepositoryForceUrlList}`)
-    core.info(`targetRepositoryNotCheckAllBranchUrlList: ${targetRepositoryNotCheckAllBranchUrlList}`)
+    core.info(`variableConfig: ${variableConfig}`)
+
+    const repository_list = variableConfig.repository_list
+    if (!!!repository_list) {
+      throw new Error('repository not exists')
+    }
 
     // 检查是否有重复的 URL
+    const sourceRepositoryUrlList = repository_list.map((repository) => {
+      return repository.source.url
+    })
+    if (!!!sourceRepositoryUrlList) {
+      throw new Error('source repository list is empty')
+    }
     const uniqueSourceUrls = new Set(sourceRepositoryUrlList)
     if (uniqueSourceUrls.size !== sourceRepositoryUrlList.length) {
       throw new Error('Duplicate URLs found in source repository list.')
     }
 
-    // 从秘密中获取源和目标仓库的用户名和密码
-    const sourceUsername = core.getInput('source_repository_username')
-    const sourcePassword = core.getInput('source_repository_password')
-    const targetUsername = core.getInput('target_repository_username')
-    const targetPassword = core.getInput('target_repository_password')
-
-    // 检查源和目标仓库列表的长度是否一致
-    if (sourceRepositoryUrlList.length !== targetRepositoryUrlList.length) {
-      throw new Error(
-        'Source and target repository lists must have the same length.'
-      )
-    }
-
     // 并发地同步每对仓库
     await Promise.all(
-      sourceRepositoryUrlList.map(async (sourceUrl, index) => {
-        const targetUrl = targetRepositoryUrlList[index]
+      repository_list.map(async (repository) => {
+        const sourceUrl = repository.source.url
+        const targetUrl = repository.target.url
         // const repoName = path.basename(sourceUrl, '.git') // 获取仓库名
-        const cloneDirName = sourceUrl.replace(/\.|:|\//g, "-")
+        const cloneDirName = sourceUrl.replace(/\.|:|\//g, '-')
         const cloneDir = path.join(process.cwd(), cloneDirName) // 定义克隆目录
 
         // 检查 cloneDir 是否存在
@@ -74,7 +64,20 @@ export async function run(): Promise<void> {
 
         // 克隆源仓库
         let finalSourceUrl = sourceUrl
-        if (sourceUsername && sourcePassword) {
+        // 得到用户名密码
+        let sourceUsername = ''
+        let sourcePassword = ''
+        if (!!repository.source.username && !!repository.source.password) {
+          sourceUsername = repository.source.username
+          sourcePassword = repository.source.password
+        } else if (
+          !!secretConfig.source?.username &&
+          !!secretConfig.source?.password
+        ) {
+          sourceUsername = secretConfig.source?.username
+          sourcePassword = secretConfig.source?.password
+        }
+        if (!!sourceUsername && !!sourcePassword) {
           // 如果提供了用户名和密码，则将其添加到URL中
           finalSourceUrl = sourceUrl.replace(
             'https://',
@@ -90,11 +93,8 @@ export async function run(): Promise<void> {
           }
         })
 
-        // 是否检出所有分支
-        const checkAllBranch = !targetRepositoryNotCheckAllBranchUrlList.includes(targetUrl)
-
         // 检出所有分支
-        if (checkAllBranch) {
+        if (!repository.not_check_all_branch) {
           await exec.exec('git', ['fetch', '--all'], { cwd: cloneDir }) // 获取所有分支
           const branches = await exec.getExecOutput('git', ['branch', '-r'], {
             cwd: cloneDir
@@ -133,7 +133,20 @@ export async function run(): Promise<void> {
 
         // 设置目标仓库的远程URL
         let finalTargetUrl = targetUrl
-        if (targetUsername && targetPassword) {
+        // 得到用户名密码
+        let targetUsername = ''
+        let targetPassword = ''
+        if (!!repository.target.username && !!repository.target.username) {
+          targetUsername = repository.target.username
+          targetPassword = repository.target.username
+        } else if (
+          !!secretConfig.target?.username &&
+          !!secretConfig.target?.password
+        ) {
+          targetUsername = secretConfig.target?.username
+          targetPassword = secretConfig.target?.username
+        }
+        if (!!targetUsername && !!targetPassword) {
           // 如果提供了用户名和密码，则将其添加到URL中
           finalTargetUrl = targetUrl.replace(
             'https://',
@@ -146,12 +159,9 @@ export async function run(): Promise<void> {
           { cwd: cloneDir }
         )
 
-        // 如果目标地址在强制推动列表里面里面，强制推送
-        const forcePush = targetRepositoryForceUrlList.includes(targetUrl)
-
         // 推送仓库参数
         const pushRepositoryParamList = ['push', '--all']
-        if (forcePush) {
+        if (repository.force) {
           pushRepositoryParamList.push('--force')
         }
 
@@ -168,7 +178,7 @@ export async function run(): Promise<void> {
 
         // 推送tag参数
         const pushTagParamList = ['push', '--tags']
-        if (forcePush) {
+        if (repository.force) {
           pushTagParamList.push('--force')
         }
 

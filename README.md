@@ -47,27 +47,11 @@ jobs:
       - name: sync
         uses: shuifan-open/github-repository-sync-action@v2
         with:
-          ## 源仓库
-          # 地址列表
-          source_repository_url_list: ${{ vars.SOURCE_REPOSITORY_URL_LIST }}
-          # 用户名，可以没有
-          source_repository_username: ${{ secrets.SOURCE_REPOSITORY_USERNAME }}
-          # 密码，可以没有
-          source_repository_password: ${{ secrets.SOURCE_REPOSITORY_PASSWORD }}
-          ## 目标仓库
-          # 地址列表
-          target_repository_url_list: ${{ vars.TARGET_REPOSITORY_URL_LIST }}
-          # 用户名，可以没有
-          target_repository_username: ${{ secrets.TARGET_REPOSITORY_USERNAME }}
-          # 密码，可以没有
-          target_repository_password: ${{ secrets.TARGET_REPOSITORY_PASSWORD }}
-          ## 额外信息
-          # 直接覆盖的仓库地址列表
-          target_repository_force_url_list: ${{ vars.TARGET_REPOSITORY_FORCE_URL_LIST }}
-          # 不同步所有分支的列表
-          target_repository_not_check_all_branch_url_list: ${{ vars.TARGET_REPOSITORY_NOT_CHECK_ALL_BRANCH_URL_LIST }}
-
+          secret_config: ${{ secrets.SECRET_CONFIG }}
+          variable_config: ${{ vars.VARIABLE_CONFIG }}
 ```
+
+参数定义在src/objDefine.ts里面
 
 在这个示例中，工作流会在 `main` 分支有推送时触发，使用 `github-repository-sync-action` 来同步代码仓库。
 
