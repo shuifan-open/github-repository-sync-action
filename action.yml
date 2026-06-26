@@ -9,24 +9,12 @@ branding:
 
 # Define your inputs here.
 inputs:
-  source_repository_url_list:
-    description: 'List of source repository URLs, one per line'
+  secret_config:
+    description: 'config'
+    required: false
+  variable_config:
+    description: 'config'
     required: true
-  source_repository_username:
-    description: 'Source repository username'
-    required: false
-  source_repository_password:
-    description: 'Source repository password'
-    required: false
-  target_repository_url_list:
-    description: 'List of target repository URLs, one per line'
-    required: true
-  target_repository_username:
-    description: 'Target repository username'
-    required: false
-  target_repository_password:
-    description: 'Target repository password'
-    required: false
 
 # Define your outputs here.
 outputs:
