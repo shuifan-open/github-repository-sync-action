@@ -78,6 +78,7 @@ jobs:
 
    ```bash
    npm install
+   npm install -g @vercel/ncc
    ```
 2. **构建项目**：
    使用以下命令构建 TypeScript 代码：
