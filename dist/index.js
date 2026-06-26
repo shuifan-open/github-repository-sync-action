@@ -27515,7 +27515,7 @@ async function run() {
         if (!!!variableConfig) {
             throw new Error('variableConfig not exists');
         }
-        core.info(`variableConfig: ${variableConfig}`);
+        core.info(`variableConfig: ${stringify(variableConfig)}`);
         const repository_list = variableConfig.repository_list;
         if (!!!repository_list) {
             throw new Error('repository not exists');
@@ -27532,7 +27532,7 @@ async function run() {
             throw new Error('Duplicate URLs found in source repository list.');
         }
         // 并发地同步每对仓库
-        await Promise.all(repository_list.map(async (repository) => {
+        await Promise.allSettled(repository_list.map(async (repository) => {
             const sourceUrl = repository.source.url;
             const targetUrl = repository.target.url;
             // const repoName = path.basename(sourceUrl, '.git') // 获取仓库名
@@ -27606,14 +27606,14 @@ async function run() {
             // 得到用户名密码
             let targetUsername = '';
             let targetPassword = '';
-            if (!!repository.target.username && !!repository.target.username) {
+            if (!!repository.target.username && !!repository.target.password) {
                 targetUsername = repository.target.username;
-                targetPassword = repository.target.username;
+                targetPassword = repository.target.password;
             }
             else if (!!secretConfig.target?.username &&
                 !!secretConfig.target?.password) {
                 targetUsername = secretConfig.target?.username;
-                targetPassword = secretConfig.target?.username;
+                targetPassword = secretConfig.target?.password;
             }
             if (!!targetUsername && !!targetPassword) {
                 // 如果提供了用户名和密码，则将其添加到URL中
